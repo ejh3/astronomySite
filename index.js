@@ -38,7 +38,7 @@ const AXIS_STYLE = {
   var star;
   var isMouseDown;
   
-  drawStar(0.25,0.25)
+  drawStarAndCoords(0.25,0.25)
   redrawCanvas();
 
 
@@ -248,7 +248,7 @@ const AXIS_STYLE = {
     }
   }
 
-  function drawStar(normalizedX, normalizedY) {
+  function drawStarAndCoords(normalizedX, normalizedY) {
     if (!star) {
       star = new fabric.Circle({
         radius: 10,
@@ -256,6 +256,17 @@ const AXIS_STYLE = {
         originX: 'center',
         originY: 'center',
       }); 
+    }
+    if (!coords) {
+      coords = new fabric.Text(`none`, {
+        fontSize: FONT_SIZE * 1.4,
+        selectable: false,
+        originX: 'left',
+        originY: 'bottom',
+        left: L,
+        top: B,
+        subscript: { size: 0.8, baseline: 0.12 },
+      });
     }
     // console.log(`Added star at ${x}, ${y}`);
     const x = invNormalizeX(normalizedX);
@@ -267,52 +278,34 @@ const AXIS_STYLE = {
 
   // Function to draw a circle at the specified position
   function moveStar(x, y) {
+    const [temp, lum] = xyToTempLum(x, y);
+    const radius = getRadiusFromTempLum(temp, lum);
+    const r = radius**Math.log10(2)*30; // doubles for every 10x increase in radius
     star.set({
+      radius: r,
       left: x,
       top: y,
       fill: `rgb(${x}, 0, 0)`,
     });
-    _updateCoords(x, y);
+    _updateCoords(temp, lum, radius);
     canvas.renderAll();
   }
 
-  function _updateCoords(x, y) {
-    // I have to do this because canvas.remove(coords) doesn't work for some
-    // reason. I have no idea why. It makes no sense.
-    // I tried to just update the text, but that didn't work either because
-    // I couldn't clear the subscript formatting.
-    canvas.forEachObject(function (obj) {
-      if (obj.objectType === 'coords') {
-        canvas.remove(obj);
-      }
-    });
-    const [temp, lum] = xyToTempLum(x, y);
-    const radius = getRadiusFromTempLum(temp, lum);
+  function _updateCoords(temp, lum, radius) {
     const parts = [
       ` Temperature: ${shortNum(temp)} K`,
       ` Luminosity: ${shortNum(lum)} L${SUN}`,
       ` Radius: ${shortNum(radius)} R${SUN}`,
     ];
     const text = parts.join('\n');
-    coords = new fabric.Text(`null`, {
-      text: text,
-      fontSize: FONT_SIZE * 1.4,
-      selectable: false,
-      originX: 'left',
-      originY: 'bottom',
-      left: L,
-      top: B,
-      subscript: { size: 0.8, baseline: 0.12 },
-      objectType: 'coords',
-    });
+    coords.set({text: text});
+    coords.set({styles: {}}); // clear subscript formatting
     for (i = 0; i < text.length; i++) {
       if (text[i] == SUN) {
         coords.setSubscript(i, i + 1);
       }
     }
-    // Turn styles object to json when logging to console
-    console.log(JSON.stringify(coords.toObject()));
-    canvas.add(coords);
+    // console.log(JSON.stringify(coords.toObject().styles)); // dbug
   }
 
   function drawSimpleStar(temp, lum, color = '#faa') {
@@ -335,7 +328,7 @@ const AXIS_STYLE = {
   function redrawCanvas() {
     // console.log(`resize ${r++} begin`); // dbug
     if (!star) {
-      drawStar(0.5, 0.5);
+      drawStarAndCoords(0.5, 0.5);
     }
     let xN = normalizeX(star.left);
     let yN = normalizeY(star.top);
@@ -353,7 +346,7 @@ const AXIS_STYLE = {
     // console.log(`Old star at (${shortNum(xN)}, ${shortNum(yN)})`); // dbug
     // console.log(`New star at (${shortNum(normalizeX(x))}, ${shortNum(normalizeY(y))})`); // dbug
     drawDiagram();
-    drawStar(xN, yN);
+    drawStarAndCoords(xN, yN);
   }
 
 

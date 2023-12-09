@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fabric.js Object Management</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/3.6.6/fabric.min.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+  <canvas id="canvas" style="display: block;"></canvas>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var canvas = new fabric.Canvas('canvas', { selection: false });
+
+      // Function to draw objects on the canvas
+      function drawObjects() {
+        // Identify and remove existing objects with objectType = 'circle'
+        canvas.forEachObject(function (obj) {
+          if (obj.objectType === 'circle') {
+            canvas.remove(obj);
+          }
+        });
+
+        // Add new circle objects
+        for (var i = 0; i < 3; i++) {
+          var circle = new fabric.Circle({
+            left: Math.random() * canvas.width,
+            top: Math.random() * canvas.height,
+            radius: 20,
+            fill: 'blue',
+            objectType: 'circle', // Custom property
+          });
+
+          canvas.add(circle);
+        }
+
+        canvas.renderAll();
+      }
+
+      // Call the drawObjects function
+      drawObjects();
+
+      // Add a button to trigger the drawObjects function
+      var drawButton = document.createElement('button');
+      drawButton.textContent = 'Draw Objects';
+      drawButton.addEventListener('click', drawObjects);
+      document.body.appendChild(drawButton);
+    });
+  </script>
+</body>
+</html>

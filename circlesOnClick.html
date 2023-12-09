@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fabric.js Circle Follow</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/3.6.6/fabric.min.js"></script>
+</head>
+<body>
+  <canvas id="canvas" width="500" height="500" style="border:1px solid #ccc;"></canvas>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Initialize fabric canvas
+      var canvas = new fabric.Canvas('canvas', { selection: false });
+
+      // Variables to track circle creation and movement
+      var isMouseDown = false;
+      var circle;
+
+      // Event listeners
+      canvas.on('mouse:down', function (options) {
+        isMouseDown = true;
+
+        // Create a new circle at the initial click position
+        var pointer = canvas.getPointer(options.e);
+        circle = new fabric.Circle({
+          left: pointer.x,
+          top: pointer.y,
+          radius: 10,
+          fill: 'blue',
+          selectable: false,
+        });
+
+        // Add the circle to the canvas
+        canvas.add(circle);
+      });
+
+      canvas.on('mouse:move', function (options) {
+        if (isMouseDown && circle) {
+          // Update the circle position to follow the cursor
+          var pointer = canvas.getPointer(options.e);
+          circle.set({ left: pointer.x, top: pointer.y });
+          canvas.renderAll();
+        }
+      });
+
+      canvas.on('mouse:up', function () {
+        isMouseDown = false;
+      });
+    });
+  </script>
+</body>
+</html>

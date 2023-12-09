@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/3.6.3/fabric.min.js"></script> -->
+  <script src="./fabric.min.js"></script>
+  <title>HR Diagram</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="hrCanvas"></canvas>
+  <script>
+    // Initialize fabric canvas
+    var canvas = new fabric.Canvas('hrCanvas', { selection: false });
+
+    // Create a text object with multiple text parts
+    var textParts = [
+      { text: 'H', fontSize: 30, fill: 'black' },
+      { text: 'ello, ', fontSize: 20, fill: 'black' },
+      { text: 'W', fontSize: 40, fill: 'red' },
+      { text: 'orld!', fontSize: 20, fill: 'black' }
+    ];
+
+    var textObjects = [];
+
+    // Position each text part
+    var leftOffset = 50;
+    var topOffset = 50;
+
+    textParts.forEach(function(part) {
+      var text = new fabric.Text(part.text, {
+        left: leftOffset,
+        top: topOffset,
+        fontSize: part.fontSize,
+        fill: part.fill
+      });
+
+      // Adjust left offset for the next part
+      leftOffset += text.width;
+
+      // Add the text object to the canvas
+      canvas.add(text);
+      textObjects.push(text);
+    });
+
+    // Render canvas after adding all text parts
+    canvas.renderAll();
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resizable Circle</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/3.6.6/fabric.min.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+  <canvas id="canvas" style="display: block;"></canvas>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var canvas = new fabric.Canvas('canvas', { selection: false });
+      var r = 0;
+
+      var circle;
+
+      function shortNum(x) {
+        return Number(x.toPrecision(2));
+      }
+
+      // Function to create or move the circle to a new position
+      function moveCircle(event) {
+        var pointer = canvas.getPointer(event.e);
+
+        if (!circle) {
+          // Create a new circle
+          circle = new fabric.Circle({
+            left: pointer.x,
+            top: pointer.y,
+            radius: 20,
+            fill: 'blue',
+          });
+
+          canvas.add(circle);
+        } else {
+          // Move the existing circle to the new position
+          circle.set({ left: pointer.x, top: pointer.y });
+        }
+
+        canvas.renderAll();
+      }
+
+      // Attach the moveCircle function to mouse click and touch events
+      canvas.on('mouse:down', moveCircle);
+      canvas.on('touch:gesture', moveCircle);
+
+      // Adjust the canvas size when the window is resized
+      window.addEventListener('resize', function () {
+        console.log(`resize ${r} begin`);
+        let w = canvas.width;
+        let h = canvas.height;
+
+        canvas.setDimensions({
+          width: window.innerWidth,
+          height: window.innerHeight
+        });
+
+        if (circle) {
+          var newLeft = circle.left * canvas.width / w;
+          var newTop = circle.top * canvas.height / h;
+
+          console.log(`    abs: (${shortNum(newLeft)}, ${shortNum(newTop)}`);
+          console.log(`    rel: (${shortNum(newLeft/canvas.width)}, ${shortNum(newTop/canvas.height)}`);
+          console.log(`    rad: ${shortNum(circle.radius)}`);
+
+          circle.set({ left: newLeft, top: newTop });
+          canvas.renderAll();
+        }
+        console.log(`resize ${r++} end`);
+      });
+
+      // Initialize canvas size
+      window.dispatchEvent(new Event('resize'));
+    });
+  </script>
+</body>
+</html>

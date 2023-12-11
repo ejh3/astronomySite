@@ -1,7 +1,11 @@
+// Result of VizieR Search with 3 ANDed constraints (Gr: "!=") AND (B-V: "!=") AND (Lum: "!=")
+
+let emojiSun = true;
+
 const T_SUN = 5778;
 
-const SUN = '🌞';
-//const SUN = '☉';
+const SUN = emojiSun ? '🌞' : '☉';
+// that code is the unicode for the sun emoji 🌞
 
 const LEFT_GAP = 50;
 const RIGHT_GAP = 50;
@@ -15,6 +19,9 @@ const AXIS_STYLE = {
   selectable: false,
   objectType: 'axis',
 }
+const SUN_SUBSCRIPT = emojiSun ? 
+  { size: 0.9, baseline: 0.16 } : 
+  { size: 0.8, baseline: 0.12 };
 
   ////////////////////////////////// INIT //////////////////////////////////
 
@@ -89,61 +96,70 @@ function fitLineWithinBorders(m, b) {
 }
 
 // takes an input in range [L,R] and intepolates to range [0,1]
-function normalizeX(x) {
-  if (x > R || x < L) {
+function normalizeX(x, ignoreOOB=false) {
+  if ((x > R || x < L) && !ignoreOOB) {
     console.error(`Error: x=${x} must be between L=${L} and R=${R}.`);
   }
   return (x - L) / (R - L)
 }
 
 // takes an input in range [B,T] and intepolates to range [0,1]
-function normalizeY(y) {
-  if (y > B || y < T) {
+function normalizeY(y, ignoreOOB=false) {
+  if ((y > B || y < T) && !ignoreOOB) {
     console.error(`Error: y=${y} must be between B=${B} and T=${T}.`);
   }
   return (y - B) / (T - B)
 }
 
-function invNormalizeX(normalizedX) {
-  if (normalizedX < 0 || normalizedX > 1) {
+function invNormalizeX(normalizedX, ignoreOOB=false) {
+  if ((normalizedX < 0 || normalizedX > 1) && !ignoreOOB) {
     console.error(`Error: normalizedX=${normalizedX} must be between 0 and 1.`);
   }
   return normalizedX * (R-L) + L;
 }
 
-function invNormalizeY(normalizedY) {
-  if (normalizedY < 0 || normalizedY > 1) {
+function invNormalizeY(normalizedY, ignoreOOB=false) {
+  if ((normalizedY < 0 || normalizedY > 1) && !ignoreOOB) {
     console.error(`Error: normalizedY=${normalizedY} must be between 0 and 1.`);
   }
   return normalizedY * (T-B) + B;
 }
 
 // takes an input x in range [0,1] and exponentially interpolates to range [a, b]
-function expInterpolate(x, a, b) {
-  if (x < 0 || x > 1) {
+function expInterpolate(x, a, b, ignoreOOB=false) {
+  if ((x < 0 || x > 1) && !ignoreOOB) {
     console.error(`Error: x=${x} must be between 0 and 1.`);
   }
   return a * Math.pow(b / a, x);
 }
 
-function invExpInterpolate(interpolatedX, a, b) {
-  if ((interpolatedX < a && interpolatedX < b) || (interpolatedX > a && interpolatedX > b)) {
+function invExpInterpolate(interpolatedX, a, b, ignoreOOB=false) {
+  if (((interpolatedX < a && interpolatedX < b) || (interpolatedX > a && interpolatedX > b))
+      && !ignoreOOB) {
     console.error(`Error: interpolatedX=${interpolatedX} must be between a=${a} and b=${b}.`);
   }
   return Math.log(interpolatedX / a) / Math.log(b / a);
 }
 
-function xyToTempLum(x, y) {
-  const temperature = x != null ? expInterpolate(normalizeX(x), 40000, 2300) : null;  
-  const luminosity = y != null ? expInterpolate(normalizeY(y), 1e-4, 1e6) : null;
+function xyToTempLum(x, y, ignoreOOB=false) {
+  const temperature = x != null ? 
+    expInterpolate(normalizeX(x, ignoreOOB), 40000, 2300, ignoreOOB) : 
+    null;  
+  const luminosity = y != null ? 
+    expInterpolate(normalizeY(y, ignoreOOB), 1e-4, 1e6, ignoreOOB) : 
+    null;
   return [temperature, luminosity];
 }
 
-function tempLumToXY(temperature, luminosity) {
+function tempLumToXY(temperature, luminosity, ignoreOOB=false) {
   const t = temperature;
   const l = luminosity;
-  const x = t != null ? invNormalizeX(invExpInterpolate(t, 40000, 2300)) : null;
-  const y = l != null ? invNormalizeY(invExpInterpolate(l, 1e-4, 1e6)) : null;
+  const x = t != null ? 
+    invNormalizeX(invExpInterpolate(t, 40000, 2300, ignoreOOB), ignoreOOB) : 
+    null;
+  const y = l != null ? 
+    invNormalizeY(invExpInterpolate(l, 1e-4, 1e6, ignoreOOB), ignoreOOB) : 
+    null;
   return [x, y];
 }
 
@@ -181,16 +197,13 @@ function drawDiagram() {
     new fabric.Line([L, B, R, B], AXIS_STYLE), // x-axis
     new fabric.Line([L, T, L, B], AXIS_STYLE), // y-axis
   );
-  _drawXAxisLabels();
-  _drawYAxisLabels();
-  _drawConstantRadiusLines(20, 50);
+  _drawXAxisLabels([40000, 20000, 10000, 5000, 2300]);
+  _drawYAxisLabels([1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6]);
+  _drawConstantRadiusLines([0.001, 0.01, 0.1, 1, 10, 100, 1000]);
 }
 
   // Function to draw x-axis labels
-function _drawXAxisLabels() {
-  const labels = [40000, 20000, 10000, 5000, 2300];
-  const tickWidth = 8;
-
+function _drawXAxisLabels(labels, tickWidth=8) {
   for (let i = 0; i < labels.length; i++) {
     const [x, _] = tempLumToXY(labels[i], null);
     const label = new fabric.Text(`${labels[i]}`, {
@@ -219,40 +232,35 @@ function _drawXAxisLabels() {
 }
 
 // Function to draw y-axis labels
-function _drawYAxisLabels() {
-  const gap = (canvas.height - TOP_GAP - BOTTOM_GAP) / 10;
-  const tickWidth = 8;
-
-  for (let i = 0; i < 11; i++) {
-    const y = B - i * gap;
-    const label = new fabric.Text(`10${i - 4} `, {
+function _drawYAxisLabels(labels, tickWidth=8) {
+  for (let i = 0; i < labels.length; i++) {
+    const [_, y] = tempLumToXY(null, labels[i]);
+    const label = new fabric.Text(`${10}${Math.log10(labels[i])}`, {
       left: L - tickWidth, // Adjusted position
       top: y,
       fontSize: FONT_SIZE,
       selectable: false,
       originY: 'center',
       originX: 'right'
-    }).setSuperscript(2,4);
+    }).setSuperscript(2, 4);
     const tick = new fabric.Line([L, y, L - tickWidth, y], AXIS_STYLE);
     canvas.add(label, tick);
   }
 }
 
 // Function to draw lines of constant radius
-function _drawConstantRadiusLines() {
-  const offset = 180;
-  const radii = [0.001, 0.01, 0.1, 1, 10, 100, 1000];
+function _drawConstantRadiusLines(radii) {
   const m = getConstRadiusSlope();
 
-  const [leftEdgeTemp, _] = xyToTempLum(0, null);
+  const [leftEdgeTemp, _] = xyToTempLum(0, null, true);
   console.log(`leftEdgeTemp=${leftEdgeTemp}`);
   for (let i = 0; i < radii.length; i++) {
     // b is where the line meets the left edge of the canvas. As such, we must calculate
     // the temperature at the left edge of the canvas, to get the luminosity at that 
     // point, to convert to to xy coords.
     const interceptLum = radii[i]**2 * (leftEdgeTemp / T_SUN)**4;
-    const [_, interceptY] = tempLumToXY(null, interceptLum);
-    console.log(`interceptLum=${interceptLum}, interceptY=${interceptY}`);
+    const [_, interceptY] = tempLumToXY(null, interceptLum, true);
+    // console.log(`interceptLum=${interceptLum}, interceptY=${interceptY}`); // dbug
 
     // const b = (B) - (i)*100 - offset;
 
@@ -294,7 +302,7 @@ function drawStarAndCoords(normalizedX, normalizedY) {
       originY: 'bottom',
       left: L,
       top: B,
-      subscript: { size: 0.8, baseline: 0.12 },
+      subscript: SUN_SUBSCRIPT,
     });
   }
   // console.log(`Added star at ${x}, ${y}`);
@@ -341,11 +349,16 @@ function _updateCoords(temp, lum, radius) {
   ];
   const text = parts.join('\n');
   coords.set({text: text});
+
+  // This for loop is NOT the same as using for (let i...) { text[i]... }. It
+  // iterates over _code points_, not bytes. The emoji sun is actually 2 bytes.
+  let i = 0;
   coords.set({styles: {}}); // clear subscript formatting
-  for (i = 0; i < text.length; i++) {
-    if (text[i] == SUN) {
-      coords.setSubscript(i, i + 1);
+  for (const codePoint of text) {
+    if (codePoint == SUN) {
+      coords.setSubscript(i, i+1);
     }
+    i++;
   }
   // console.log(JSON.stringify(coords.toObject().styles)); // dbug
 }

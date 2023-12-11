@@ -317,7 +317,7 @@ const clusterData = {
   ]
 }
 
-let emojiSun = true;
+let emojiSun = false;
 
 const distinctColors = [
   '#e6194b', // Bright orange
@@ -344,8 +344,7 @@ const distinctColors = [
 
 const T_SUN = 5778;
 
-const SUN = emojiSun ? '🌞' : '☉';
-// that code is the unicode for the sun emoji 🌞
+let SUN = emojiSun ? '🌞' : '☉';
 
 const LEFT_GAP = 50;
 const RIGHT_GAP = 50;
@@ -359,7 +358,7 @@ const AXIS_STYLE = {
   selectable: false,
   objectType: 'axis',
 }
-const SUN_SUBSCRIPT = emojiSun ? 
+let SUN_SUBSCRIPT = emojiSun ? 
   { size: 0.9, baseline: 0.16 } : 
   { size: 0.8, baseline: 0.12 };
 
@@ -367,6 +366,7 @@ const SUN_SUBSCRIPT = emojiSun ?
 
 const containerEl = document.getElementById('hrContainer');
 const clusterSelect = document.getElementById('clusterSelect');
+const emojiSunBtn = document.getElementById('emojiToggle');
 const selectedClusters = [];
 // Initialize Fabric.js canvas
 const canvas = new fabric.Canvas('hrCanvas', { 
@@ -426,7 +426,6 @@ function kelvinToRGB(kelvin) {
 
 // m and b refer to the values in the equation y = m*x + b
 function fitLineWithinBorders(m, b) {
-  console.log(`m=${m}, b=${b}`);
   const x1a = L;
   const x1b = (T - b) / m;
   const x1 = x1a > x1b ? x1a : x1b; // intersect with left or top
@@ -596,7 +595,7 @@ function _drawConstantRadiusLines(radii) {
   const m = getConstRadiusSlope();
 
   const [leftEdgeTemp, _] = xyToTempLum(0, null, true);
-  console.log(`leftEdgeTemp=${leftEdgeTemp}`);
+  // console.log(`leftEdgeTemp=${leftEdgeTemp}`); // dbug
   for (let i = 0; i < radii.length; i++) {
     // b is where the line meets the left edge of the canvas. As such, we must calculate
     // the temperature at the left edge of the canvas, to get the luminosity at that 
@@ -729,7 +728,7 @@ function drawClusters() {
     const stars = clusterData[selectedClusters[i]];
     for (const s of stars) {
       const { bV, lum } = s;
-      console.log(`bvlum: ${bV}, ${lum}`); // dbug
+      // console.log(`bvlum: ${bV}, ${lum}`); // dbug
       const temp = bVToTemp(bV);
       drawSimpleStar(temp, lum, distinctColors[i % distinctColors.length]);
     }
@@ -783,10 +782,17 @@ function populateDropdown() {
   }
 }
 
+emojiSunBtn.addEventListener('change', () => {
+  emojiSun = emojiSunBtn.checked;
+  SUN = emojiSun ? '🌞' : '☉';
+  SUN_SUBSCRIPT = emojiSun ? { size: 0.9, baseline: 0.16 } : { size: 0.8, baseline: 0.12 };
+  redrawCanvas();
+});
+
 clusterSelect.addEventListener('change', () => {
   const newSelectedClusters = Array.from(clusterSelect.selectedOptions).map(option => option.value);
-  console.log(`selectedValues=${newSelectedClusters}`); // dbug
-  console.log(`selectedClusters=${selectedClusters}`); // dbug
+  // console.log(`selectedValues=${newSelectedClusters}`); // dbug
+  // console.log(`selectedClusters=${selectedClusters}`); // dbug
 
   // Remove clusters that are no longer selected
   for (let i = 0; i < selectedClusters.length; i++) {
@@ -800,21 +806,17 @@ clusterSelect.addEventListener('change', () => {
       newSelectedClusters.splice(newSelectedClusters.indexOf(selectedClusters[i]), 1);
     }
   }
-  console.log(`selectedClusters=${selectedClusters}`); // dbug
 
   // Add clusters that are newly selected
   for (const clusterName of newSelectedClusters) {
     let firstEmptyIdx = selectedClusters.findIndex((cluster) => cluster == "");
     if (firstEmptyIdx == -1) {
       selectedClusters.push(clusterName);
-      console.log(clusterName);
     }
     else {
       selectedClusters[firstEmptyIdx] = clusterName;
     }
   }
-  selectedClusters.push("wtf");
-  console.log(`selectedClusters=${selectedClusters}`); // dbug
   redrawCanvas();
 });
 

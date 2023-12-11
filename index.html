@@ -21,20 +21,22 @@
       top: 0;
       left: 0;
       width: 100%;
+      height: 90px;
       padding: 10px;
       border: 1px solid #ccc;
       background-color: #f1f1f1;
       z-index: 1;
       display: flex;
       flex-direction: row;
+      justify-content: space-between;
     }
 
     #hrContainer {
       position: absolute;
-      top: 60px; /* adjust based on dropdown height */
+      top: 90px; /* adjust based on dropdown height */
       left: 0;
       width: 100%;
-      height: calc(100vh - 60px);
+      height: calc(100vh - 90px);
       border: 1px solid #ccc;
       background-color: #fff;
     }
@@ -46,12 +48,11 @@
       flex: 1; /* fills remaining space */
     }
 
-    #desc {
-      /* position: fixed;
-      top: 0;
-      right: 0; */
+    #items {
+      padding: 20px 30px;
       display: flex;
-      padding: 10px;
+      flex-direction: column;
+      align-items: flex-start; 
     }
 
     #redBox, #greenBox {
@@ -64,8 +65,16 @@
     <label for="clusterSelect"></label>
     <select id="clusterSelect" multiple>
     </select>
-    <div id="desc">Cluster data from Extended Hipparcos Compilation (XHIP) (Anderson+, 2012).<br> Accessed through VizieR</div>
-
+    <div id="items">
+      <div id="desc">
+        Cluster data from Extended Hipparcos Compilation (XHIP) (Anderson+, 2012).
+        <br> Accessed through VizieR
+      </div>
+      <div>
+        <label for="emojiToggle">Emoji Sun?</label>
+        <input type="checkbox" id="emojiToggle" name="emojiToggle">
+      </div>
+    </div>
   </div>
   <div id="hrContainer"> 
     <!-- style="position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;"> -->

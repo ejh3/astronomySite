@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/3.6.3/fabric.min.js"></script>
+  <title>HR Diagram</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="hrCanvas"></canvas>
+  <script>
+    // Initialize Fabric.js canvas
+    const canvas = new fabric.Canvas('hrCanvas', { 
+      selection: false, 
+      // renderOnAddRemove: false
+    });
+
+    // Constants for gaps
+    const leftGap = 50;
+    const rightGap = 50;
+    const topGap = 50;
+    const bottomGap = 50;
+
+    // Circle object
+    const circle = new fabric.Circle({
+      radius: 10,
+      fill: 'red',
+      left: 100,
+      top: 100,
+      selectable: false
+    });
+
+    // Text object for coordinates
+    const coordinatesText = new fabric.Text('Coordinates: (0, 0)', {
+      left: leftGap,
+      top: canvas.height - bottomGap + 40,
+      fontSize: 14,
+      selectable: false
+    });
+
+    // Function to draw x and y axes
+    function drawAxes() {
+      const xAxis = new fabric.Line([leftGap, canvas.height - bottomGap, canvas.width - rightGap, canvas.height - bottomGap], {
+        stroke: '#000',
+        strokeWidth: 2
+      });
+
+      const yAxis = new fabric.Line([leftGap, topGap, leftGap, canvas.height - bottomGap], {
+        stroke: '#000',
+        strokeWidth: 2
+      });
+
+      canvas.add(xAxis, yAxis);
+    }
+
+    // m and b refer to the values in the equation y = m*x + b
+    function fitLineWithinBorders(m, b) {
+      console.log(`m=${m}, b=${b}`);
+      const x1a = L;
+      const x1b = (T - b) / m;
+      const x1 = x1a > x1b ? x1a : x1b; // intersect with left or top
+      const y1 = x1a > x1b ? m * L + b : T;
+
+      const x2a = R;
+      const x2b = (B - b) / m;
+      const x2 = x2a < x2b ? x2a : x2b; // intersect with right or bottom
+      const y2 = x2a < x2b ? m * R + b : B;
+      return [x1, y1, x2, y2]
+    }
+
+    // Function to draw lines of constant radius
+    function drawConstantRadiusLines(n, yGap, m) {
+      const offset = 8;
+
+      for (let i = 0; i < n; i++) {
+        const b = (canvas.height - bottomGap) - (i + 1) * yGap - offset;
+
+        const [x1, y1, x2, y2] = fitLineWithinBorders(m, b);
+        const line = new fabric.Line([x1, y1, x2, y2], {
+          stroke: '#aaa',
+          strokeWidth: 1,
+          selectable: false
+        });
+
+        const label = new fabric.Text(`R${i + 1}`, {
+          left: x1 - 15,
+          top: y1 + 5,
+          fontSize: 12,
+          selectable: false
+        });
+
+        canvas.add(line, label);
+      }
+    }
+
+    // Function to draw x-axis labels
+    function drawXAxisLabels() {
+      const labels = [40000, 30000, 20000, 10000, 5000, 4000, 3000, 2500, 2300];
+      const gap = (canvas.width - leftGap - rightGap) / (labels.length - 1);
+
+      for (let i = 0; i < labels.length; i++) {
+        const x = leftGap + i * gap;
+        const label = new fabric.Text(labels[i].toString(), {
+          left: x,
+          top: canvas.height - bottomGap + 20, // Adjusted position
+          fontSize: i === 0 ? 16 : 12,
+          selectable: false
+        });
+
+        canvas.add(label);
+      }
+
+      // Add "Temperature (K)" label
+      const tempLabel = new fabric.Text("Temperature (K)", {
+        left: (canvas.width - leftGap - rightGap) / 2 + leftGap,
+        top: canvas.height - 10,
+        fontSize: 16,
+        originX: 'center',
+        selectable: false
+      });
+
+      canvas.add(tempLabel);
+    }
+
+    // Function to draw y-axis labels
+    function drawYAxisLabels() {
+      const exponentLabels = Array.from({ length: 12 }, (_, i) => i - 4);
+      const gap = (canvas.height - topGap - bottomGap) / (exponentLabels.length - 1);
+
+      for (let i = 0; i < exponentLabels.length; i++) {
+        const exponent = exponentLabels[i];
+        const y = canvas.height - bottomGap - i * gap;
+        const label = new fabric.Text(`10^${exponent}`, {
+          left: leftGap - 20, // Adjusted position
+          top: y,
+          fontSize: i === 0 ? 16 : 12,
+          selectable: false
+        });
+
+        canvas.add(label);
+      }
+    }
+
+    // Function to redraw the canvas
+    function redrawCanvas() {
+      // Remove existing objects from the canvas
+      canvas.clear();
+
+      L = leftGap;
+      T = topGap;
+      R = canvas.width - rightGap;
+      B = canvas.height - bottomGap;
+
+      // Redraw elements
+      drawAxes();
+      drawXAxisLabels();
+      drawYAxisLabels();
+      drawConstantRadiusLines(10, 50, 0.2);
+
+
+      // Add circle and coordinates text to the canvas
+      canvas.add(circle, coordinatesText);
+    }
+
+    // Add mouse move event listener to update circle position and coordinates
+    canvas.on('mouse:move', function (event) {
+      if (event.target && event.target === circle) {
+        const x = event.pointer.x;
+        const y = event.pointer.y;
+
+        // Update circle position
+        circle.set({ left: x, top: y });
+
+        // Update coordinates text
+        coordinatesText.set({ text: `Coordinates: (${x.toFixed(2)}, ${y.toFixed(2)})` });
+
+        // Render the changes
+        canvas.renderAll();
+      }
+    });
+
+    // Update canvas dimensions on window resize
+    window.addEventListener('resize', function () {
+      canvas.setDimensions({ width: window.innerWidth, height: window.innerHeight });
+      redrawCanvas();
+    });
+
+    // Set initial canvas dimensions and draw initial elements
+    canvas.setDimensions({ width: window.innerWidth, height: window.innerHeight });
+    redrawCanvas();
+  </script>
+</body>
+</html>

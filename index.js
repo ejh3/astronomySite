@@ -25,13 +25,15 @@ const SUN_SUBSCRIPT = emojiSun ?
 
   ////////////////////////////////// INIT //////////////////////////////////
 
+  const containerEl = document.getElementById('hrContainer');
+
   // Initialize Fabric.js canvas
   const canvas = new fabric.Canvas('hrCanvas', { 
     selection: false, 
     // renderOnAddRemove: false
   });
   // Set initial canvas dimensions and draw initial elements
-  canvas.setDimensions({ width: window.innerWidth, height: window.innerHeight });
+  canvas.setDimensions({ width: containerEl.offsetWidth, height: containerEl.offsetHeight });
 
   var L = LEFT_GAP;
   var T = TOP_GAP;
@@ -300,8 +302,6 @@ function drawStarAndCoords(normalizedX, normalizedY) {
       selectable: false,
       originX: 'left',
       originY: 'bottom',
-      left: L,
-      top: B,
       subscript: SUN_SUBSCRIPT,
     });
   }
@@ -348,7 +348,11 @@ function _updateCoords(temp, lum, radius) {
     ` Radius: ${shortNum(radius)} R${SUN}`,
   ];
   const text = parts.join('\n');
-  coords.set({text: text});
+  coords.set({
+    text: text,
+    left: L,
+    top: B,
+  });
 
   // This for loop is NOT the same as using for (let i...) { text[i]... }. It
   // iterates over _code points_, not bytes. The emoji sun is actually 2 bytes.
@@ -389,7 +393,9 @@ function redrawCanvas() {
   let yN = normalizeY(star.top);
 
   canvas.clear();
-  canvas.setDimensions({ width: window.innerWidth, height: window.innerHeight });
+  // canvas.setDimensions({ width: window.innerWidth, height: window.innerHeight });
+  canvas.setDimensions({ width: containerEl.offsetWidth, height: containerEl.offsetHeight });
+
   
   L = LEFT_GAP;
   T = TOP_GAP;

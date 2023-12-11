@@ -330,6 +330,16 @@ const distinctColors = [
   '#f032e6', // Magenta
   '#bcf60c', // Light green
   '#fabebe', // Pink
+  '#729f9f', // Steel blue
+  '#bf5b17', // Brown
+  '#434343', // Gray
+  '#a67c00', // Golden brown
+  '#9a0eea', // Vivid purple
+  '#800080', // Purple
+  '#663399', // Amethyst
+  '#4169e1', // Royal blue
+  '#009688', // Teal
+  '#c0392b', // Red
 ];
 
 const T_SUN = 5778;
@@ -356,8 +366,8 @@ const SUN_SUBSCRIPT = emojiSun ?
 ////////////////////////////////// INIT //////////////////////////////////
 
 const containerEl = document.getElementById('hrContainer');
-const clusterDropdown = document.getElementById('clusterSelect');
-var selectedClusters = [];
+const clusterSelect = document.getElementById('clusterSelect');
+const selectedClusters = [];
 // Initialize Fabric.js canvas
 const canvas = new fabric.Canvas('hrCanvas', { 
   selection: false, 
@@ -713,16 +723,16 @@ function drawSimpleStar(temp, lum, color = '#faa') {
 }
 
 function drawClusters() {
-  let i = 0;
-  for (const cluster of selectedClusters) {
-    const stars = clusterData[cluster];
+  for (let i = 0; i < selectedClusters.length; i++) {
+    if (selectedClusters[i] == "") { continue; }
+    console.log(`Drawing cluster ${selectedClusters[i]}`); // dbug
+    const stars = clusterData[selectedClusters[i]];
     for (const s of stars) {
       const { bV, lum } = s;
       console.log(`bvlum: ${bV}, ${lum}`); // dbug
       const temp = bVToTemp(bV);
-      drawSimpleStar(temp, lum, distinctColors[i]);
+      drawSimpleStar(temp, lum, distinctColors[i % distinctColors.length]);
     }
-    i++;
   }
 }
 
@@ -768,17 +778,43 @@ function populateDropdown() {
     const option = document.createElement('option');
     option.text = `${i}: ${clusterName}`;
     option.value = clusterName;
-    clusterDropdown.appendChild(option);
+    clusterSelect.appendChild(option);
     i++;
   }
 }
 
-clusterDropdown.addEventListener('change', () => {
-  selectedClusters = []; // Clear existing selection
-  for (const option of clusterDropdown.selectedOptions) {
-    selectedClusters.push(option.value);
+clusterSelect.addEventListener('change', () => {
+  const newSelectedClusters = Array.from(clusterSelect.selectedOptions).map(option => option.value);
+  console.log(`selectedValues=${newSelectedClusters}`); // dbug
+  console.log(`selectedClusters=${selectedClusters}`); // dbug
+
+  // Remove clusters that are no longer selected
+  for (let i = 0; i < selectedClusters.length; i++) {
+    // If what we thought was selected no longer is, make an empty slot.
+    if (!newSelectedClusters.includes(selectedClusters[i])) {
+      selectedClusters[i] = "";
+    }
+    // If what we thought was selected still is, remove it from newSelectedClusters so only new
+    // selections remain.
+    else {
+      newSelectedClusters.splice(newSelectedClusters.indexOf(selectedClusters[i]), 1);
+    }
   }
-  console.log(`selectedClusters=${selectedClusters}`);
+  console.log(`selectedClusters=${selectedClusters}`); // dbug
+
+  // Add clusters that are newly selected
+  for (const clusterName of newSelectedClusters) {
+    let firstEmptyIdx = selectedClusters.findIndex((cluster) => cluster == "");
+    if (firstEmptyIdx == -1) {
+      selectedClusters.push(clusterName);
+      console.log(clusterName);
+    }
+    else {
+      selectedClusters[firstEmptyIdx] = clusterName;
+    }
+  }
+  selectedClusters.push("wtf");
+  console.log(`selectedClusters=${selectedClusters}`); // dbug
   redrawCanvas();
 });
 
@@ -796,7 +832,6 @@ canvas.on('mouse:move', function (options) {
   const pointer = canvas.getPointer(options.e);
   const [x, y] = [pointer.x, pointer.y];
   if (isMouseDown) {
-    //moveStar(x, y);
     moveStar(Math.min(R, Math.max(x, L)), Math.min(B, Math.max(y, T)));
   }
 });

@@ -16,7 +16,7 @@
       overflow: hidden;
     }
 
-    #starClusterDropdown {
+    #topBar {
       position: fixed;
       top: 0;
       left: 0;
@@ -25,6 +25,8 @@
       border: 1px solid #ccc;
       background-color: #f1f1f1;
       z-index: 1;
+      display: flex;
+      flex-direction: row;
     }
 
     #hrContainer {
@@ -43,16 +45,27 @@
       border: 1px solid #ccc;
       flex: 1; /* fills remaining space */
     }
+
+    #desc {
+      position: fixed;
+      top: 0;
+      right: 0;
+      display: flex;
+      padding: 10px;
+    }
+
+    #redBox, #greenBox {
+      margin: 5px;
+    }
   </style>
 </head>
 <body>
-  <div id="starClusterDropdown">
-    <label for="clusterSelect">Choose star clusters:</label>
+  <div id="topBar">
+    <label for="clusterSelect"></label>
     <select id="clusterSelect" multiple>
-      <option value="1">Cluster 1</option>
-      <option value="2">Cluster 2</option>
-      <option value="100">Cluster 100</option>
     </select>
+    <div id="desc">Cluster data from Extended Hipparcos Compilation (XHIP) (Anderson+, 2012).<br> Accessed through VizieR</div>
+
   </div>
   <div id="hrContainer"> 
     <!-- style="position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;"> -->
